@@ -4,7 +4,7 @@ from pythonosc import udp_client
 import math
 
 # --- 設定 ---
-camera_index = 1  # 使用するカメラ番号
+camera_index = 0# 使用するカメラ番号
 OSC_IP = "127.0.0.1"
 OSC_PORT = 9000
 

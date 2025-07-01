@@ -76,6 +76,7 @@ crashlytics-build.properties
 
 #
 /Assets/Plugins
+/Assets/TextMesh Pro
 /Assets/TouchDesigner
 /Assets/Packages
 /PrototypeBuild
