@@ -30,6 +30,14 @@ public class SummonTrigger : MonoBehaviour
         {
             ringUI.SetActive(true);
             ringUI.transform.position = transform.position;
+
+            // アニメーションでアイコンを展開
+            var animator = ringUI.GetComponent<RingUIAnimator_RectTransform>();
+            if (animator != null)
+            {
+                animator.PlaySummonAnimation();
+            }
+
             Debug.Log("🟢 接触中 + LeftGrabbing でリングUI表示！");
             isHandInside = false;
         }
@@ -38,6 +46,14 @@ public class SummonTrigger : MonoBehaviour
         {
             ringUI.SetActive(true);
             ringUI.transform.position = transform.position;
+
+            // スペースキーでもアニメーション発火
+            var animator = ringUI.GetComponent<RingUIAnimator_RectTransform>();
+            if (animator != null)
+            {
+                animator.PlaySummonAnimation();
+            }
+
             Debug.Log("🔵 スペースキーでリングUI表示！");
         }
     }
