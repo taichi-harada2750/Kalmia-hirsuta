@@ -3,6 +3,7 @@ using DG.Tweening;
 
 public class UIHoverEffectPulsing : MonoBehaviour
 {
+    public Vector3 initialScale = Vector3.one;　// ← Inspectorで事前指定
     private Vector3 originalScale;
     private Tween pulseTween;
     private bool isHovering = false;
@@ -12,7 +13,8 @@ public class UIHoverEffectPulsing : MonoBehaviour
 
     void OnEnable()
     {
-        originalScale = transform.localScale;
+        originalScale = initialScale;
+        transform.localScale = originalScale;
     }
 
     public void SetHover(bool hovering)

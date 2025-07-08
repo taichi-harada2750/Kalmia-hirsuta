@@ -2,38 +2,58 @@ using UnityEngine;
 
 public class ResetRingUI : MonoBehaviour
 {
-    public GameObject ringUI;       // 展開されるリングUI
-    public GameObject summonButton; // 元の召喚ボタン
-    public GameObject resetButton;  // このリセットボタン自身
+    public GameObject ringUI;
+    public GameObject summonButton;
+    public GameObject resetButton;
+    public SummonTrigger summonTrigger;
+
+    private float inputBlockTimer = 0f;
+    public float inputBlockDuration = 0.6f;
+
+    void Update()
+    {
+        if (inputBlockTimer > 0f)
+        {
+            inputBlockTimer -= Time.deltaTime;
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ResetUI();
+        }
+    }
 
     public void ResetUI()
     {
-        // リングUIを非表示に
+        Debug.Log("🔁 ResetUI() 実行");
+
         if (ringUI != null)
         {
             ringUI.SetActive(false);
-            Debug.Log("🔴 リングUIを非表示にしました");
+            Debug.Log("🔴 ringUI を非表示にしました");
         }
 
-        // ResetButtonを非表示に、SummonButtonを再表示
         if (resetButton != null)
         {
             resetButton.SetActive(false);
-            Debug.Log("🟡 Resetボタンを非表示にしました");
+            Debug.Log("🟡 resetButton を非表示にしました");
         }
 
         if (summonButton != null)
         {
             summonButton.SetActive(true);
-            Debug.Log("🟢 Summonボタンを再表示しました");
+            Debug.Log("🟢 summonButton を再表示しました");
         }
-    }
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.R))
+        // 自身のグラブ入力も一時ブロック
+        inputBlockTimer = inputBlockDuration;
+
+        // SummonTrigger 側のブロックも呼び出し
+        if (summonTrigger != null)
         {
-            ResetUI();
+            summonTrigger.BlockInputForSeconds(inputBlockDuration);
+            Debug.Log("⏱️ summonTrigger に入力ブロックを要求しました");
         }
     }
 }
