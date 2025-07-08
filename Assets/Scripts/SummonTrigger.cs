@@ -3,12 +3,17 @@ using UnityEngine;
 public class SummonTrigger : MonoBehaviour
 {
     public GameObject ringUI;
+    public GameObject summonButton; // ← UI召喚ボタン（自身）
+    public GameObject resetButton;  // ← リセットボタン
 
     private bool isHandInside = false;
 
+    private float inputBlockTimer = 0f; // 入力ブロック用タイマー
+    public float inputBlockDuration = 0.6f; // ブロック時間（秒）
+
     void OnTriggerEnter(Collider other)
     {
-        if (other.name.Contains("Right")) // ← 表示上「右手」に見える手
+        if (other.name.Contains("Right"))
         {
             isHandInside = true;
             Debug.Log("🟠 右手オブジェクトがTriggerに入りました（中身はLeftHand）");
@@ -26,35 +31,45 @@ public class SummonTrigger : MonoBehaviour
 
     void Update()
     {
-        if (isHandInside && PalmDataManager.LeftGrabbing) // ← 判定はLeftGrabbingに修正！
+        // 入力ブロック中は何もしない
+        if (inputBlockTimer > 0f)
         {
-            ringUI.SetActive(true);
-            ringUI.transform.position = transform.position;
+            inputBlockTimer -= Time.deltaTime;
+            return;
+        }
 
-            // アニメーションでアイコンを展開
-            var animator = ringUI.GetComponent<RingUIAnimator_RectTransform>();
-            if (animator != null)
-            {
-                animator.PlaySummonAnimation();
-            }
-
-            Debug.Log("🟢 接触中 + LeftGrabbing でリングUI表示！");
+        if (isHandInside && PalmDataManager.LeftGrabbing)
+        {
+            ShowRingUI();
             isHandInside = false;
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ringUI.SetActive(true);
-            ringUI.transform.position = transform.position;
-
-            // スペースキーでもアニメーション発火
-            var animator = ringUI.GetComponent<RingUIAnimator_RectTransform>();
-            if (animator != null)
-            {
-                animator.PlaySummonAnimation();
-            }
-
-            Debug.Log("🔵 スペースキーでリングUI表示！");
+            ShowRingUI();
         }
+    }
+
+    void ShowRingUI()
+    {
+        ringUI.SetActive(true);
+        ringUI.transform.position = transform.position;
+
+        var animator = ringUI.GetComponent<RingUIAnimator_RectTransform>();
+        if (animator != null)
+        {
+            animator.PlaySummonAnimation();
+        }
+
+        if (summonButton != null) summonButton.SetActive(false);
+        if (resetButton != null) resetButton.SetActive(true);
+
+        Debug.Log("🟢 リングUI表示 & ボタン切り替え");
+    }
+
+    // 外部から呼び出して、一定時間グラブを無効化
+    public void BlockInputForSeconds(float seconds)
+    {
+        inputBlockTimer = seconds;
     }
 }
