@@ -3,14 +3,17 @@ using UnityEngine.UI;
 
 public class CommonAppLauncher : MonoBehaviour
 {
-    public GameObject ringUI;
-    public PalmCursorManager cursorManager;
+    [Header("共通UI・カーソル")]
+    public GameObject ringUI;                        // リングUI（起動前に表示される）
+    public PalmCursorManager cursorManager;          // UIカーソル制御用
 
-    [Header("起動に必要な構成")]
-    public GameObject gameWindow;          // ゲーム用UI一式（スクラッチウィンドウなど）
-    public GameObject gameCursorGroup;     // ゲーム用カーソル（両手セット）
-    public Button closeButton;             // ×ボタン
-    public MonoBehaviour gameLogicScript;  // ScratcherManagerなどを想定
+    [Header("ゲーム専用")]
+    public GameObject gameWindow;                    // アプリ本体（ウィンドウ）
+    public GameObject gameCursorGroup;               // ゲームカーソル（左右手セット）
+    public GameObject closeButtonObject;             // ×ボタン（IconTrigger付き）
+
+    [Header("ゲーム処理スクリプト")]
+    public MonoBehaviour gameLogicScript;            // ScratcherManagerなど
 
     private bool isRunning = false;
 
@@ -18,34 +21,38 @@ public class CommonAppLauncher : MonoBehaviour
     {
         if (isRunning) return;
 
-        ringUI.SetActive(false);
-        cursorManager.SetMode(PalmCursorManager.CursorMode.Game);
+        // UIカーソル非表示、リング非表示
+        if (cursorManager != null) cursorManager.SetUICursorActive(false);
+        if (ringUI != null) ringUI.SetActive(false);
 
-        gameWindow.SetActive(true);
-        gameCursorGroup.SetActive(true);
-        closeButton.gameObject.SetActive(true);
+        // ゲーム系ON
+        if (gameCursorGroup != null) gameCursorGroup.SetActive(true);
+        if (gameWindow != null) gameWindow.SetActive(true);
+        if (closeButtonObject != null) closeButtonObject.SetActive(true);
 
+        // ゲーム初期化（StartAppメソッドを呼ぶ）
         if (gameLogicScript != null)
         {
             var method = gameLogicScript.GetType().GetMethod("StartApp");
             method?.Invoke(gameLogicScript, null);
         }
 
-        closeButton.onClick.RemoveAllListeners();
-        closeButton.onClick.AddListener(CloseApp);
-
         isRunning = true;
+        Debug.Log("[CommonAppLauncher] アプリを起動しました。");
     }
 
     public void CloseApp()
     {
-        ringUI.SetActive(true);
-        cursorManager.SetMode(PalmCursorManager.CursorMode.UI);
+        // ゲームUIやカーソルをOFF
+        if (gameWindow != null) gameWindow.SetActive(false);
+        if (gameCursorGroup != null) gameCursorGroup.SetActive(false);
+        if (closeButtonObject != null) closeButtonObject.SetActive(false);
 
-        gameWindow.SetActive(false);
-        gameCursorGroup.SetActive(false);
-        closeButton.gameObject.SetActive(false);
+        // UIカーソルとリングUIを戻す
+        if (cursorManager != null) cursorManager.SetUICursorActive(true);
+        if (ringUI != null) ringUI.SetActive(true);
 
         isRunning = false;
+        Debug.Log("[CommonAppLauncher] アプリを終了してUIに戻りました。");
     }
 }

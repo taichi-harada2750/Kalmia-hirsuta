@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ScratchMaterial
-  m_Shader: {fileID: 4800000, guid: 3cfe370cb67d7c24485894fc4d4c9898, type: 3}
+  m_Shader: {fileID: 4800000, guid: ed37996cd6b4cc8469a726c1fb3d5326, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -44,11 +44,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: c0363b483fc3b304f9e8ab4b9adb8cff, type: 3}
+        m_Texture: {fileID: 2800000, guid: 48c2e72e91828b64f9b80f10d7d873e4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
-        m_Texture: {fileID: 8400000, guid: 410442945ec8c6b4290096754fa4bae8, type: 2}
+        m_Texture: {fileID: 8400000, guid: d191923fa0d7fa246ab33f334fc11a9c, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
