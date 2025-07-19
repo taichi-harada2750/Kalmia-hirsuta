@@ -9,11 +9,19 @@ public class IconTrigger : MonoBehaviour
     public UnityEvent onClick;
 
     private bool isHovering = false;
+    private string hoveringHand = ""; // "Left" または "Right"
 
     void OnTriggerEnter(Collider other)
     {
         if (other.name.Contains("Right"))
         {
+            hoveringHand = "Right";
+            isHovering = true;
+            effect?.SetHover(true);
+        }
+        else if (other.name.Contains("Left"))
+        {
+            hoveringHand = "Left";
             isHovering = true;
             effect?.SetHover(true);
         }
@@ -21,20 +29,28 @@ public class IconTrigger : MonoBehaviour
 
     void OnTriggerExit(Collider other)
     {
-        if (other.name.Contains("Right"))
+        if (other.name.Contains(hoveringHand))
         {
             isHovering = false;
+            hoveringHand = "";
             effect?.SetHover(false);
         }
     }
 
     void Update()
     {
-        if (isHovering && (PalmDataManager.LeftGrabbing || PalmDataManager.RightGrabbing))
+        if (isHovering)
         {
-            effect?.PlayClickEffect();
-            onClick?.Invoke(); // ← 後で「ウィンドウを開く」とかに使える
-            isHovering = false; // 繰り返し防止
+            bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
+                              (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
+
+            if (isGrabbing)
+            {
+                effect?.PlayClickEffect();
+                onClick?.Invoke();
+                isHovering = false;
+                hoveringHand = "";
+            }
         }
     }
 }

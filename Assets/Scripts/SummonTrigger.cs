@@ -3,45 +3,60 @@ using UnityEngine;
 public class SummonTrigger : MonoBehaviour
 {
     public GameObject ringUI;
-    public GameObject summonButton; // ← UI召喚ボタン（自身）
-    public GameObject resetButton;  // ← リセットボタン
+    public GameObject summonButton;
+    public GameObject resetButton;
 
     private bool isHandInside = false;
+    private string hoveringHand = ""; // "Left" または "Right"
 
-    private float inputBlockTimer = 0f; // 入力ブロック用タイマー
-    public float inputBlockDuration = 0.6f; // ブロック時間（秒）
+    private float inputBlockTimer = 0f;
+    public float inputBlockDuration = 0.6f;
 
     void OnTriggerEnter(Collider other)
     {
         if (other.name.Contains("Right"))
         {
             isHandInside = true;
-            Debug.Log("🟠 右手オブジェクトがTriggerに入りました（中身はLeftHand）");
+            hoveringHand = "Right";
+            Debug.Log("🟠 右手オブジェクトがTriggerに入りました");
+        }
+        else if (other.name.Contains("Left"))
+        {
+            isHandInside = true;
+            hoveringHand = "Left";
+            Debug.Log("🟠 左手オブジェクトがTriggerに入りました");
         }
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.name.Contains("Right"))
+        if (other.name.Contains(hoveringHand))
         {
             isHandInside = false;
-            Debug.Log("⚪ 右手オブジェクトがTriggerから出ました");
+            hoveringHand = "";
+            Debug.Log("⚪ " + other.name + " がTriggerから出ました");
         }
     }
 
     void Update()
     {
-        // 入力ブロック中は何もしない
         if (inputBlockTimer > 0f)
         {
             inputBlockTimer -= Time.deltaTime;
             return;
         }
 
-        if (isHandInside && PalmDataManager.LeftGrabbing)
+        if (isHandInside)
         {
-            ShowRingUI();
-            isHandInside = false;
+            bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
+                              (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
+
+            if (isGrabbing)
+            {
+                ShowRingUI();
+                isHandInside = false;
+                hoveringHand = "";
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -67,7 +82,6 @@ public class SummonTrigger : MonoBehaviour
         Debug.Log("🟢 リングUI表示 & ボタン切り替え");
     }
 
-    // 外部から呼び出して、一定時間グラブを無効化
     public void BlockInputForSeconds(float seconds)
     {
         inputBlockTimer = seconds;
