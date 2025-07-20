@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ScratchPainter : MonoBehaviour
+public class ScratchPainter_wrong : MonoBehaviour
 {
     [Header("描画設定")]
     [SerializeField] private RenderTexture maskRT;
@@ -46,7 +46,7 @@ public class ScratchPainter : MonoBehaviour
             Vector3 size = bounds.size;
 
             // XY平面：Xを横軸、Yを縦軸としてUVを構成
-            float u = localPoint.x / size.x;
+            float u =  localPoint.x / size.x;
             float v = localPoint.y / size.y;
             uv = new Vector2(u, v);
 
@@ -93,6 +93,8 @@ public class ScratchPainter : MonoBehaviour
 
         Debug.Log($"[ScratchPainter] Drawn at pixel: {pixel}");
     }
+    [SerializeField] private Texture2D initialMask;  // 初期状態のマスク画像
+
     public void ClearMask()
     {
         if (maskRT == null)
@@ -101,11 +103,18 @@ public class ScratchPainter : MonoBehaviour
             return;
         }
 
-        RenderTexture.active = maskRT;
-        GL.Clear(true, true, Color.black); // マスクを完全に消す（透明化）
-        RenderTexture.active = null;
-
-        Debug.Log("[ScratchPainter] Mask cleared.");
+        if (initialMask != null)
+        {
+            Graphics.Blit(initialMask, maskRT);
+            Debug.Log("[ScratchPainter] マスクを初期画像から復元しました。");
+        }
+        else
+        {
+            RenderTexture.active = maskRT;
+            GL.Clear(true, true, Color.black); // fallback: 黒で塗りつぶし
+            RenderTexture.active = null;
+            Debug.Log("[ScratchPainter] マスクを黒で初期化（初期画像なし）");
+        }
     }
 
 }
