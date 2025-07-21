@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
+
 
 public class AppCloseController : MonoBehaviour
 {
@@ -44,18 +46,63 @@ public void CloseApp()
         return;
     }
 
-    appWindow.SetActive(false);
-    gameCursorGroup.SetActive(false);
+    Debug.Log("[AppCloseController] CloseApp() 開始");
 
-    if (ringUI != null) ringUI.SetActive(true);
-    if (uiCursorGroup != null) uiCursorGroup.SetActive(true);
+    if (appWindow != null) appWindow.SetActive(false);
+    if (gameCursorGroup != null) gameCursorGroup.SetActive(false);
+
+    if (ringUI != null)
+    {
+        ringUI.SetActive(true);
+        Debug.Log("[AppCloseController] ringUI を表示しました");
+    }
+    else
+    {
+        Debug.LogWarning("[AppCloseController] ringUI が設定されていません！");
+    }
+
+    if (uiCursorGroup != null)
+    {
+        uiCursorGroup.SetActive(true);
+        Debug.Log("[AppCloseController] uiCursorGroup を表示しました");
+    }
+    else
+    {
+        Debug.LogWarning("[AppCloseController] uiCursorGroup が設定されていません！");
+    }
+
+    onAppClosed?.Invoke();
+
+    // 最後に自身を非表示（他が反映されてから）
+    StartCoroutine(DeactivateSelf());
+}
+
+private IEnumerator DeactivateSelf()
+{
+    yield return null;
+    gameObject.SetActive(false);
+    Debug.Log("[AppCloseController] 自分自身を非アクティブにしました");
+}
+
+
+private IEnumerator CloseSequence()
+{
+    appWindow.SetActive(false);
+    gameCursorGroup?.SetActive(false);
+
+    yield return null; // フレームを跨いで確実に状態反映
+
+    ringUI?.SetActive(true);
+    uiCursorGroup?.SetActive(true);
 
     Debug.Log("[AppCloseController] アプリを閉じてUI操作に戻しました");
 
-    gameObject.SetActive(false); // 自分のボタンも非表示
+    onAppClosed?.Invoke();
 
-    onAppClosed?.Invoke(); // ← ここで任意の終了処理が呼ばれる！
+    yield return null;
+    gameObject.SetActive(false); // 最後に無効化
 }
+
 
 
 
