@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class TargetResetter : MonoBehaviour
 {
-    [Tooltip("削除対象のタグ名（デフォルト: Target）")]
-    public string targetTag = "Target";
+    [Tooltip("削除対象のタグ名（複数指定可能）")]
+    public string[] targetTags = { "Target" };
 
     [Tooltip("スコアもリセットするか")]
     public bool resetScore = true;
@@ -14,7 +14,6 @@ public class TargetResetter : MonoBehaviour
     [Tooltip("リセットを遅らせる秒数（例：2秒）")]
     public float resetDelay = 2f;
 
-    // 外部から呼び出す用
     public void ResetAll()
     {
         CancelInvoke(nameof(PerformReset));
@@ -23,10 +22,15 @@ public class TargetResetter : MonoBehaviour
 
     private void PerformReset()
     {
-        GameObject[] targets = GameObject.FindGameObjectsWithTag(targetTag);
-        foreach (var obj in targets)
+        int totalCount = 0;
+        foreach (string tag in targetTags)
         {
-            Destroy(obj);
+            GameObject[] targets = GameObject.FindGameObjectsWithTag(tag);
+            foreach (var obj in targets)
+            {
+                Destroy(obj);
+                totalCount++;
+            }
         }
 
         if (resetScore)
@@ -36,7 +40,7 @@ public class TargetResetter : MonoBehaviour
 
         if (logOnReset)
         {
-            Debug.Log($"[TargetResetter] {targets.Length}個のターゲットを削除しました。スコアもリセット: {resetScore}");
+            Debug.Log($"[TargetResetter] {totalCount}個のターゲットを削除しました。スコアもリセット: {resetScore}");
         }
     }
 }

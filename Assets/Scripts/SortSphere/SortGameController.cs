@@ -20,6 +20,9 @@ public class SortGameController : MonoBehaviour
     public Transform spawnArea;
     public int spawnCount = 30;
 
+    public TargetResetter targetResetter; // インスペクターでアタッチ
+
+
     private float timeRemaining;
     private bool isGameRunning = false;
 
@@ -86,6 +89,12 @@ public class SortGameController : MonoBehaviour
         // スコア表示（SortGameManagerから取得）
         resultText.text = $"SCORE: {SortGameManager.Instance.GetScore()}";
         resultText.gameObject.SetActive(true);
+        // ⬇️ この行を追加
+        if (targetResetter != null)
+        {
+            targetResetter.ResetAll();
+        }
+
     }
 
     void SpawnObjects()
@@ -109,4 +118,5 @@ public class SortGameController : MonoBehaviour
 
         return new Vector3(x, y, z);
     }
+    
 }

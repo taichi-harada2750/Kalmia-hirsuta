@@ -2,24 +2,95 @@ using UnityEngine;
 
 public class CloseButton : MonoBehaviour
 {
-    [Header("閉じる対象のアプリウィンドウ")]
-    public GameObject targetApp;
+    [Header("クローズダイアログを呼び出すUI")]
+    [SerializeField] private CommonCloseDialog closeDialog;
 
-    [Header("アプリ終了制御を行う共通クラス")]
-    public CommonAppCloser closer;
+    [Header("強制リセット処理（2回押し用）")]
+    [SerializeField] private SceneResetRequester resetRequester;
 
-    /// <summary>
-    /// UIのボタンやIconTriggerから呼び出す用のメソッド
-    /// </summary>
-    public void OnClickClose()
+    [Header("ホバー演出（任意）")]
+    [SerializeField] private UIHoverEffectPulsing effect;
+
+    private bool blockInteraction = false;
+    private bool isHovering = false;
+    private string hoveringHand = "";
+
+    // Escダブル押し用
+    private float lastEscPressedTime = -99f;
+    private const float escDoublePressThreshold = 1.5f; // 秒
+
+    void Update()
     {
-        if (closer != null && targetApp != null)
+        // Escキー対応
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            closer.CloseApp(targetApp);
+            float now = Time.time;
+            if (now - lastEscPressedTime < escDoublePressThreshold)
+            {
+                Debug.Log("[CloseButton] Escキー2回押しで強制リセットします");
+                resetRequester?.RequestReset();
+            }
+            else
+            {
+                Debug.Log("[CloseButton] Escキー1回目 → クローズダイアログ表示");
+                closeDialog?.ShowDialog();
+                lastEscPressedTime = now;
+            }
+
+            return; // Esc入力時は他の処理は無視
         }
-        else
+
+        // 通常Hover+Grab操作（ブロック中は無効）
+        if (blockInteraction) return;
+
+        if (isHovering)
         {
-            Debug.LogWarning("[CloseButton] closerまたはtargetAppが設定されていません！");
+            bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
+                              (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
+
+            if (isGrabbing)
+            {
+                effect?.PlayClickEffect();
+                closeDialog?.ShowDialog();
+                isHovering = false;
+                hoveringHand = "";
+            }
         }
     }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (blockInteraction) return;
+
+        if (other.name.Contains("Right"))
+        {
+            hoveringHand = "Right";
+            isHovering = true;
+            effect?.SetHover(true);
+        }
+        else if (other.name.Contains("Left"))
+        {
+            hoveringHand = "Left";
+            isHovering = true;
+            effect?.SetHover(true);
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (blockInteraction) return;
+
+        if (other.name.Contains(hoveringHand))
+        {
+            isHovering = false;
+            hoveringHand = "";
+            effect?.SetHover(false);
+        }
+    }
+
+    // 外部制御
+    public void Block() => blockInteraction = true;
+    public void Allow() => blockInteraction = false;
+    public void SetBlocked(bool blocked) => blockInteraction = blocked;
+    public bool IsBlocked => blockInteraction;
 }

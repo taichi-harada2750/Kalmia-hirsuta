@@ -65,7 +65,7 @@ public class SummonTrigger : MonoBehaviour
         }
     }
 
-    void ShowRingUI()
+    public void ShowRingUI()
     {
         ringUI.SetActive(true);
         ringUI.transform.position = transform.position;
