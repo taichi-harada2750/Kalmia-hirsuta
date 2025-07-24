@@ -8,21 +8,26 @@ public class IconTrigger : MonoBehaviour
     [Tooltip("このアイコンが選択されたときに呼び出す処理")]
     public UnityEvent onClick;
 
+    [Header("効果音キー（SoundManager側に登録された名前）")]
+    public string clickSEKey = "click";
+
+    [Header("誤作動防止設定")]
+    public bool requireReleaseBeforeClick = false;
+
+    private bool hasEnteredSinceSummon = false;
+    private bool hasBeenReleased = false;
+
     private bool isHovering = false;
-    private string hoveringHand = ""; // "Left" または "Right"
+    private string hoveringHand = "";
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.name.Contains("Right"))
+        if (other.name.Contains("Right") || other.name.Contains("Left"))
         {
-            hoveringHand = "Right";
+            hoveringHand = other.name.Contains("Right") ? "Right" : "Left";
             isHovering = true;
-            effect?.SetHover(true);
-        }
-        else if (other.name.Contains("Left"))
-        {
-            hoveringHand = "Left";
-            isHovering = true;
+            hasEnteredSinceSummon = true;
+            hasBeenReleased = false;
             effect?.SetHover(true);
         }
     }
@@ -39,18 +44,35 @@ public class IconTrigger : MonoBehaviour
 
     void Update()
     {
-        if (isHovering)
-        {
-            bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
-                              (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
+        if (!isHovering) return;
 
-            if (isGrabbing)
+        bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
+                          (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
+
+        if (requireReleaseBeforeClick)
+        {
+            if (hasEnteredSinceSummon && !hasBeenReleased && !isGrabbing)
             {
-                effect?.PlayClickEffect();
-                onClick?.Invoke();
-                isHovering = false;
-                hoveringHand = "";
+                hasBeenReleased = true;
+                return;
             }
+
+            if (!hasBeenReleased) return;
+        }
+
+        if (isGrabbing)
+        {
+            effect?.PlayClickEffect();
+
+            if (!string.IsNullOrEmpty(clickSEKey))
+                SoundManager.Instance.PlaySE(clickSEKey); // ← 名前指定でSE再生！
+
+            onClick?.Invoke();
+
+            isHovering = false;
+            hoveringHand = "";
+            hasEnteredSinceSummon = false;
+            hasBeenReleased = false;
         }
     }
 }

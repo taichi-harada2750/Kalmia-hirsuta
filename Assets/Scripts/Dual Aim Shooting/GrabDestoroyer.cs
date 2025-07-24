@@ -8,6 +8,14 @@ public class GrabbableDestroyer : MonoBehaviour
     private bool wasLeftGrabbing = false;
     private bool wasRightGrabbing = false;
 
+    [Header("効果音キー（SoundManagerの登録名）")]
+    public string correctSEKey = "success";
+    public string wrongSEKey = "fail";
+
+    [Header("破壊エフェクト")]
+    public GameObject correctEffectPrefab;
+    public GameObject wrongEffectPrefab;
+
     void OnTriggerStay(Collider other)
     {
         if (other.name.Contains("Left"))
@@ -41,6 +49,15 @@ public class GrabbableDestroyer : MonoBehaviour
         bool isCorrect = (type == ObjectType.Good);
         SortGameManager.Instance.AddScore(isCorrect);
         Debug.Log($"[{hand}] {(isCorrect ? "成功" : "減点")} → {gameObject.name}");
+
+        // SEをSoundManager経由で再生
+        if (SoundManager.Instance != null)
+        {
+            string key = isCorrect ? correctSEKey : wrongSEKey;
+            if (!string.IsNullOrEmpty(key))
+                SoundManager.Instance.PlaySE(key);
+        }
+
         Destroy(gameObject);
     }
 }

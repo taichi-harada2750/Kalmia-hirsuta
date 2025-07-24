@@ -19,12 +19,16 @@ public class DualAimController : MonoBehaviour
 
     private float timeRemaining;
     private bool isGameRunning = false;
-
+    private bool hasRefilledTargets = false;
 
     [Header("プレハブ")]
     public GameObject goodTargetPrefab;
     public GameObject badTargetPrefab;
 
+    [Header("UI連携")]
+    public CloseButton closeButton;
+
+    public TargetResetter resetter;
 
     void Start()
     {
@@ -45,11 +49,30 @@ public class DualAimController : MonoBehaviour
         if (isGameRunning && scoreText != null)
         {
             scoreText.text = $"Score: {SortGameManager.Instance.GetScore()}";
+
+            // 残りターゲットが10未満なら一度だけ追加
+            int targetCount = GameObject.FindGameObjectsWithTag("Target").Length;
+            if (!hasRefilledTargets && targetCount < 10)
+            {
+                SpawnTargets();
+                hasRefilledTargets = true;
+            }
         }
     }
 
     public void OnStartButtonPressed()
     {
+        // UIと状態を初期化
+        resultText.gameObject.SetActive(false);
+        timerText.text = "";
+        timerText.gameObject.SetActive(false);
+        if (scoreText != null) scoreText.text = "Score: 0";
+        SortGameManager.Instance.ResetScore();
+
+        // 既存ターゲット削除
+        ClearExistingTargets();
+
+        hasRefilledTargets = false;
         startButton.SetActive(false);
         StartCoroutine(GameSequence());
     }
@@ -64,6 +87,8 @@ public class DualAimController : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
         countdownText.gameObject.SetActive(false);
+
+        closeButton?.Block();
 
         if (scoreText != null) scoreText.gameObject.SetActive(true);
 
@@ -85,6 +110,15 @@ public class DualAimController : MonoBehaviour
 
         resultText.text = $"SCORE: {SortGameManager.Instance.GetScore()}";
         resultText.gameObject.SetActive(true);
+
+        ClearExistingTargets();
+        EndGame();
+        closeButton?.Allow();
+
+        SortGameManager.Instance.ResetScore();
+        if (scoreText != null) scoreText.text = "Score: 0";
+
+        startButton.SetActive(true);
     }
 
     void SpawnTargets()
@@ -92,14 +126,12 @@ public class DualAimController : MonoBehaviour
         for (int i = 0; i < spawnCount; i++)
         {
             bool isBad = Random.value < 0.2f;
-
             GameObject prefab = isBad ? badTargetPrefab : goodTargetPrefab;
             GameObject obj = Instantiate(prefab, GetRandomPosition(), Quaternion.identity);
 
             obj.tag = "Target";
             obj.layer = LayerMask.NameToLayer("Target");
 
-            // もし TargetObject や Destroyer がプレハブに付いていないなら動的に付加
             if (obj.GetComponent<TargetObject>() == null)
                 obj.AddComponent<TargetObject>();
 
@@ -111,14 +143,9 @@ public class DualAimController : MonoBehaviour
         }
     }
 
-
-
     Vector3 GetRandomPosition()
     {
-        // 中心位置はそのまま（Planeの位置）
         Vector3 center = new Vector3(5.1f, 65f, 27.9f);
-
-        // 元の見た目ベース：幅45、高さ26 → それを10倍
         float width = 450f;
         float height = 260f;
 
@@ -129,10 +156,6 @@ public class DualAimController : MonoBehaviour
         return new Vector3(x, y, z);
     }
 
-
-
-
-
     void OnDrawGizmos()
     {
         Vector3 center = new Vector3(5.1f, -2f, 27.9f);
@@ -141,18 +164,17 @@ public class DualAimController : MonoBehaviour
         Gizmos.DrawWireCube(center, size);
     }
 
-    public TargetResetter resetter;
-
     void EndGame()
     {
-        // ゲーム結果処理などの後で
         resetter?.ResetAll();
     }
 
-
-    
-
-
-
-
+    void ClearExistingTargets()
+    {
+        var targets = GameObject.FindGameObjectsWithTag("Target");
+        foreach (var t in targets)
+        {
+            Destroy(t);
+        }
+    }
 }
