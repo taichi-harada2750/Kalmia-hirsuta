@@ -8,9 +8,13 @@ public class SortGameManager : MonoBehaviour
     public int score = 0;
     public TMP_Text scoreText;
 
+    // --- ここを追加 ---
+    public delegate void ScoreChangedHandler(bool isCorrect);
+    public static event ScoreChangedHandler OnScoreChanged;
+    // -------------------
+
     void Awake()
     {
-        // シングルトン化
         if (Instance == null)
             Instance = this;
         else
@@ -26,6 +30,10 @@ public class SortGameManager : MonoBehaviour
     public void AddScore(bool correct)
     {
         score += correct ? 1 : -1;
+
+        // --- スコアが変わったことを通知 ---
+        OnScoreChanged?.Invoke(correct);
+
         UpdateScoreText();
     }
 

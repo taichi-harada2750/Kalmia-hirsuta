@@ -108,7 +108,7 @@ public class SortGameController : MonoBehaviour
 
     Vector3 GetRandomPosition()
     {
-        Vector3 center = new Vector3(-11f, -146f, 27.9f);
+        Vector3 center = new Vector3(-11f, -130f, 27.9f);
         float width = 24.752f * 10f;
         float height = 16.644f * 10f;
 

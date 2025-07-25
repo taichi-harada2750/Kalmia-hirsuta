@@ -7,6 +7,9 @@ public class RingScrollController_Angular : MonoBehaviour
     public float damping = 6f;                // 慣性の減衰スピード（大きいほど早く止まる）
     public float angleThreshold = 1.5f;       // デッドゾーン（角度が小さいと無視）
 
+    [Header("スクロール効果音キー（SoundManagerに登録済みのキー）")]
+    public string scrollSEKey = "scroll";
+
     private bool isGrabbing = false;
     private Vector3 center;
     private Vector3 lastHandPos;
@@ -23,6 +26,12 @@ public class RingScrollController_Angular : MonoBehaviour
             isGrabbing = true;
             center = ringUI.position;
             lastHandPos = handPos;
+
+            // スクロール効果音を鳴らす
+            if (SoundManager.Instance != null && !string.IsNullOrEmpty(scrollSEKey))
+            {
+                SoundManager.Instance.PlaySE(scrollSEKey);
+            }
         }
 
         // Grab中：角度差分で回転
