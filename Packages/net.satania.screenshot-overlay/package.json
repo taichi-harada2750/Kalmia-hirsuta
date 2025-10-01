@@ -1,0 +1,16 @@
+{
+  "name": "net.satania.screenshot-overlay",
+  "displayName": "Satania's ScreenShot Overlay",
+  "version": "1.1.0",
+  "description": "Describe this Package",
+  "gitDependencies": {},
+  "vpmDependencies": {},
+  "author": {
+    "name": "Satania",
+    "email": "osigoto@satania.net",
+    "url": "https://x.com/71s9"
+  },
+  "legacyFolders": {},
+  "legacyFiles": {},
+  "localPath": ""
+}
