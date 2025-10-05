@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GrabbableDestroyer : MonoBehaviour
 {
-    public enum ObjectType { Good, Bad }
+    public enum ObjectType { Good, Bad, HardBad }
     public ObjectType type = ObjectType.Good;
 
     private bool wasLeftGrabbing = false;
@@ -46,18 +46,26 @@ public class GrabbableDestroyer : MonoBehaviour
 
     void TryDestroy(string hand)
     {
-        bool isCorrect = (type == ObjectType.Good);
-        SortGameManager.Instance.AddScore(isCorrect);
-        Debug.Log($"[{hand}] {(isCorrect ? "成功" : "減点")} → {gameObject.name}");
+        if (type == ObjectType.HardBad)
+        {
+            HardScoreHandler.Instance.AddHardPenalty();
+        }
+        else
+        {
+            bool isCorrect = (type == ObjectType.Good);
+            SortGameManager.Instance.AddScore(isCorrect);
+        }
 
-        // SEをSoundManager経由で再生
+        // 🔊 SEをSoundManager経由で再生（全タイプ共通）
         if (SoundManager.Instance != null)
         {
-            string key = isCorrect ? correctSEKey : wrongSEKey;
+            string key = (type == ObjectType.Good) ? correctSEKey : wrongSEKey;
             if (!string.IsNullOrEmpty(key))
                 SoundManager.Instance.PlaySE(key);
         }
 
         Destroy(gameObject);
     }
+
+
 }

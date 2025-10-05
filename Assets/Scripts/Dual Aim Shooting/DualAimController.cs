@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using System.Collections.Generic;  
+
 
 public class DualAimController : MonoBehaviour
 {
@@ -20,15 +22,20 @@ public class DualAimController : MonoBehaviour
     private float timeRemaining;
     private bool isGameRunning = false;
     private bool hasRefilledTargets = false;
+    private bool hasRefilledAfterGoodLow = false;
 
     [Header("プレハブ")]
     public GameObject goodTargetPrefab;
     public GameObject badTargetPrefab;
+    public GameObject hardBadTargetPrefab;
 
     [Header("UI連携")]
     public CloseButton closeButton;
 
     public TargetResetter resetter;
+
+    public ScoreDisplay scoreDisplay; // ← インスペクタで割り当て
+
 
     void Start()
     {
@@ -36,6 +43,8 @@ public class DualAimController : MonoBehaviour
         timerText.gameObject.SetActive(false);
         resultText.gameObject.SetActive(false);
         startButton.SetActive(true);
+        scoreDisplay.gameObject.SetActive(true);
+
 
         SortGameManager.Instance.ResetScore();
         if (scoreText != null)
@@ -50,14 +59,35 @@ public class DualAimController : MonoBehaviour
         {
             scoreText.text = $"Score: {SortGameManager.Instance.GetScore()}";
 
-            // 残りターゲットが10未満なら一度だけ追加
-            int targetCount = GameObject.FindGameObjectsWithTag("Target").Length;
-            if (!hasRefilledTargets && targetCount < 10)
+            int totalCount = GameObject.FindGameObjectsWithTag("Target").Length;
+            int goodCount = CountGoodTargets();
+
+            if (!hasRefilledTargets && totalCount < 10)
             {
-                SpawnTargets();
+                Debug.Log("🔵 全体ターゲット補充");
+                SpawnTargets(); // 通常
                 hasRefilledTargets = true;
             }
+            else if (hasRefilledTargets && !hasRefilledAfterGoodLow && goodCount <= 5)
+            {
+                Debug.Log("🟢 Good枯渇後のハードターゲット補充");
+                HardScoreHandler.Instance.hardModeActive = true; // Hardモード突入時（2回目のSpawn直前など）
+                SpawnTargets(isHardMode: true); // ← 難易度上げた補充
+                hasRefilledAfterGoodLow = true;
+            }
         }
+    }
+    int CountGoodTargets()
+    {
+        int count = 0;
+        var targets = GameObject.FindGameObjectsWithTag("Target");
+        foreach (var t in targets)
+        {
+            var g = t.GetComponent<GrabbableDestroyer>();
+            if (g != null && g.type == GrabbableDestroyer.ObjectType.Good)
+                count++;
+        }
+        return count;
     }
 
     public void OnStartButtonPressed()
@@ -74,6 +104,7 @@ public class DualAimController : MonoBehaviour
 
         hasRefilledTargets = false;
         startButton.SetActive(false);
+        scoreDisplay.gameObject.SetActive(false);
         StartCoroutine(GameSequence());
     }
 
@@ -119,29 +150,44 @@ public class DualAimController : MonoBehaviour
         if (scoreText != null) scoreText.text = "Score: 0";
 
         startButton.SetActive(true);
+        scoreDisplay.gameObject.SetActive(true);
     }
 
-    void SpawnTargets()
+    void SpawnTargets(bool isHardMode = false)
     {
         for (int i = 0; i < spawnCount; i++)
         {
-            bool isBad = Random.value < 0.2f;
-            GameObject prefab = isBad ? badTargetPrefab : goodTargetPrefab;
-            GameObject obj = Instantiate(prefab, GetRandomPosition(), Quaternion.identity);
+            GameObject prefab;
 
+            if (isHardMode)
+            {
+                // ⚡ Hardモード：HardBad と Good のみ出現
+                prefab = (Random.value < 0.4f)
+                    ? hardBadTargetPrefab   // Hard専用敵（速度・挙動はPrefab側で設定）
+                    : goodTargetPrefab;
+            }
+            else
+            {
+                // 通常モード：Good多め、Bad少なめ
+                bool isBad = Random.value < 0.2f;
+                prefab = isBad ? badTargetPrefab : goodTargetPrefab;
+            }
+
+            GameObject obj = Instantiate(prefab, GetRandomPosition(), Quaternion.identity);
             obj.tag = "Target";
             obj.layer = LayerMask.NameToLayer("Target");
 
-            if (obj.GetComponent<TargetObject>() == null)
-                obj.AddComponent<TargetObject>();
-
+            // --- タイプ設定 ---
             if (obj.GetComponent<GrabbableDestroyer>() == null)
             {
                 var grab = obj.AddComponent<GrabbableDestroyer>();
-                grab.type = isBad ? GrabbableDestroyer.ObjectType.Bad : GrabbableDestroyer.ObjectType.Good;
+                grab.type = (prefab == badTargetPrefab || prefab == hardBadTargetPrefab)
+                    ? GrabbableDestroyer.ObjectType.Bad
+                    : GrabbableDestroyer.ObjectType.Good;
             }
         }
     }
+
 
     Vector3 GetRandomPosition()
     {
@@ -164,10 +210,19 @@ public class DualAimController : MonoBehaviour
         Gizmos.DrawWireCube(center, size);
     }
 
-    void EndGame()
-    {
-        resetter?.ResetAll();
-    }
+void EndGame()
+{
+    int finalScore = SortGameManager.Instance.GetScore();
+    ScoreManager.SaveScore(finalScore);
+
+    // 🔹 即時ランキング更新
+    if (scoreDisplay != null)
+        scoreDisplay.UpdateRanking();
+
+    resetter?.ResetAll();
+}
+
+
 
     void ClearExistingTargets()
     {
