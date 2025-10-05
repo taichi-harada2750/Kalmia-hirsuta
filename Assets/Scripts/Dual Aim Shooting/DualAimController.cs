@@ -102,7 +102,11 @@ public class DualAimController : MonoBehaviour
         // 既存ターゲット削除
         ClearExistingTargets();
 
+        
+
         hasRefilledTargets = false;
+        hasRefilledAfterGoodLow = false;
+        HardScoreHandler.Instance.hardModeActive = false;
         startButton.SetActive(false);
         scoreDisplay.gameObject.SetActive(false);
         StartCoroutine(GameSequence());
