@@ -9,8 +9,10 @@ namespace KIS.Core
     {
         public Vector3 LeftPos { get; private set; }
         public Vector3 RightPos { get; private set; }
+        public Vector3 MousePos { get; private set; } // 追加
         public bool LeftGrab { get; private set; }
         public bool RightGrab { get; private set; }
+        public bool MouseGrab { get; private set; }   // 追加
 
         private const float smooth = 0.3f;
 
@@ -24,6 +26,12 @@ namespace KIS.Core
         {
             RightPos = Vector3.Lerp(RightPos, newpos, smooth);
             RightGrab = grab;
+        }
+
+        public void UpdateMouse(Vector3 newpos, bool grab)
+        {
+            MousePos = Vector3.Lerp(MousePos, newpos, smooth);
+            MouseGrab = grab;
         }
 
     }

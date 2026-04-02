@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using KIS.Output;
 
 public class IconTriggerWithClose : MonoBehaviour
 {
@@ -18,17 +19,28 @@ public class IconTriggerWithClose : MonoBehaviour
     [Tooltip("このウィンドウを閉じる対象（アクティブをfalseにする）")]
     public GameObject targetWindow;
 
+    [Header("KIS Adapter")]
+    public UnityUIOutputAdapter kisAdapter;
+
     private bool hasEnteredSinceSummon = false;
     private bool hasBeenReleased = false;
 
     private bool isHovering = false;
     private string hoveringHand = "";
 
+    void Awake()
+    {
+        if (kisAdapter == null) kisAdapter = FindObjectOfType<UnityUIOutputAdapter>();
+    }
+
     void OnTriggerEnter(Collider other)
     {
-        if (other.name.Contains("Right") || other.name.Contains("Left"))
+        if (other.name.Contains("Right") || other.name.Contains("Left") || other.name.Contains("Mouse"))
         {
-            hoveringHand = other.name.Contains("Right") ? "Right" : "Left";
+            if (other.name.Contains("Right")) hoveringHand = "Right";
+            else if (other.name.Contains("Left")) hoveringHand = "Left";
+            else hoveringHand = "Mouse";
+
             isHovering = true;
             hasEnteredSinceSummon = true;
             hasBeenReleased = false;
@@ -46,44 +58,42 @@ public class IconTriggerWithClose : MonoBehaviour
         }
     }
 
-    void Update()
+    void OnEnable()
+    {
+        if (kisAdapter != null) kisAdapter.OnGrabDetected += HandleGrab;
+    }
+
+    void OnDisable()
+    {
+        if (kisAdapter != null) kisAdapter.OnGrabDetected -= HandleGrab;
+    }
+
+    private void HandleGrab(Vector3 grabPos)
     {
         if (!isHovering) return;
 
-        bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
-                          (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
+        effect?.PlayClickEffect();
 
-        if (requireReleaseBeforeClick)
+        if (!string.IsNullOrEmpty(clickSEKey))
+            SoundManager.Instance.PlaySE(clickSEKey);
+
+        // まず既存のonClickイベントを呼び出す
+        onClick?.Invoke();
+
+        // その後、対象ウィンドウを閉じる
+        if (targetWindow != null)
         {
-            if (hasEnteredSinceSummon && !hasBeenReleased && !isGrabbing)
-            {
-                hasBeenReleased = true;
-                return;
-            }
-
-            if (!hasBeenReleased) return;
+            targetWindow.SetActive(false);
         }
 
-        if (isGrabbing)
-        {
-            effect?.PlayClickEffect();
+        isHovering = false;
+        hoveringHand = "";
+        hasEnteredSinceSummon = false;
+        hasBeenReleased = false;
+    }
 
-            if (!string.IsNullOrEmpty(clickSEKey))
-                SoundManager.Instance.PlaySE(clickSEKey);
-
-            // まず既存のonClickイベントを呼び出す
-            onClick?.Invoke();
-
-            // その後、対象ウィンドウを閉じる
-            if (targetWindow != null)
-            {
-                targetWindow.SetActive(false);
-            }
-
-            isHovering = false;
-            hoveringHand = "";
-            hasEnteredSinceSummon = false;
-            hasBeenReleased = false;
-        }
+    void Update()
+    {
+        // KISのイベント駆動になったためUpdate内での直接のGrab判定処理は削除
     }
 }

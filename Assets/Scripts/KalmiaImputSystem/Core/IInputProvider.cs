@@ -8,9 +8,10 @@ namespace KIS.Core
     /// </summary>
     public interface IInputProvider
     {
-        // ✅ public明示 + Action引数明確化
+        //public明示 + Action引数明確化
         public event Action<HandData> OnLeftHandUpdated;
         public event Action<HandData> OnRightHandUpdated;
+        public event Action<HandData> OnMouseUpdated;
 
         public void Initialize();
         public void UpdateProvider();

@@ -1,4 +1,5 @@
 using UnityEngine;
+using KIS.Output;
 
 public class SummonTrigger : MonoBehaviour
 {
@@ -6,11 +7,19 @@ public class SummonTrigger : MonoBehaviour
     public GameObject summonButton;
     public GameObject resetButton;
 
+    [Header("KIS Adapter")]
+    public UnityUIOutputAdapter kisAdapter;
+
     private bool isHandInside = false;
     private string hoveringHand = ""; // "Left" または "Right"
 
     private float inputBlockTimer = 0f;
     public float inputBlockDuration = 0.6f;
+
+    void Awake()
+    {
+        if (kisAdapter == null) kisAdapter = FindObjectOfType<UnityUIOutputAdapter>();
+    }
 
     void OnTriggerEnter(Collider other)
     {
@@ -26,6 +35,12 @@ public class SummonTrigger : MonoBehaviour
             hoveringHand = "Left";
             Debug.Log("🟠 左手オブジェクトがTriggerに入りました");
         }
+        else if (other.name.Contains("Mouse"))
+        {
+            isHandInside = true;
+            hoveringHand = "Mouse";
+            Debug.Log("🟠 マウスオブジェクトがTriggerに入りました");
+        }
     }
 
     void OnTriggerExit(Collider other)
@@ -38,6 +53,28 @@ public class SummonTrigger : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        if (kisAdapter != null) kisAdapter.OnGrabDetected += HandleGrab;
+    }
+
+    void OnDisable()
+    {
+        if (kisAdapter != null) kisAdapter.OnGrabDetected -= HandleGrab;
+    }
+
+    private void HandleGrab(Vector3 grabPos)
+    {
+        if (inputBlockTimer > 0f) return;
+
+        if (isHandInside)
+        {
+            ShowRingUI();
+            isHandInside = false;
+            hoveringHand = "";
+        }
+    }
+
     void Update()
     {
         if (inputBlockTimer > 0f)
@@ -46,18 +83,7 @@ public class SummonTrigger : MonoBehaviour
             return;
         }
 
-        if (isHandInside)
-        {
-            bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
-                              (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
-
-            if (isGrabbing)
-            {
-                ShowRingUI();
-                isHandInside = false;
-                hoveringHand = "";
-            }
-        }
+        // KISのイベント駆動になったためUpdate内での直接のGrab監視は削除
 
         if (Input.GetKeyDown(KeyCode.Space))
         {

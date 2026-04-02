@@ -1,4 +1,5 @@
 using UnityEngine;
+using KIS.Output;
 
 public class CloseButton : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class CloseButton : MonoBehaviour
     [Header("ホバー演出（任意）")]
     [SerializeField] private UIHoverEffectPulsing effect;
 
+    [Header("KIS Adapter")]
+    public UnityUIOutputAdapter kisAdapter;
+
     private bool blockInteraction = false;
     private bool isHovering = false;
     private string hoveringHand = "";
@@ -18,6 +22,11 @@ public class CloseButton : MonoBehaviour
     // Escダブル押し用
     private float lastEscPressedTime = -99f;
     private const float escDoublePressThreshold = 1.5f; // 秒
+
+    void Awake()
+    {
+        if (kisAdapter == null) kisAdapter = FindObjectOfType<UnityUIOutputAdapter>();
+    }
 
     void Update()
     {
@@ -43,19 +52,7 @@ public class CloseButton : MonoBehaviour
         // 通常Hover+Grab操作（ブロック中は無効）
         if (blockInteraction) return;
 
-        if (isHovering)
-        {
-            bool isGrabbing = (hoveringHand == "Right" && PalmDataManager.RightGrabbing) ||
-                              (hoveringHand == "Left" && PalmDataManager.LeftGrabbing);
-
-            if (isGrabbing)
-            {
-                effect?.PlayClickEffect();
-                closeDialog?.ShowDialog();
-                isHovering = false;
-                hoveringHand = "";
-            }
-        }
+        // KISのイベント駆動になったためUpdate内での直接のGrab判定処理は削除
     }
 
     void OnTriggerEnter(Collider other)
@@ -74,6 +71,12 @@ public class CloseButton : MonoBehaviour
             isHovering = true;
             effect?.SetHover(true);
         }
+        else if (other.name.Contains("Mouse"))
+        {
+            hoveringHand = "Mouse";
+            isHovering = true;
+            effect?.SetHover(true);
+        }
     }
 
     void OnTriggerExit(Collider other)
@@ -85,6 +88,29 @@ public class CloseButton : MonoBehaviour
             isHovering = false;
             hoveringHand = "";
             effect?.SetHover(false);
+        }
+    }
+
+    void OnEnable()
+    {
+        if (kisAdapter != null) kisAdapter.OnGrabDetected += HandleGrab;
+    }
+
+    void OnDisable()
+    {
+        if (kisAdapter != null) kisAdapter.OnGrabDetected -= HandleGrab;
+    }
+
+    private void HandleGrab(Vector3 grabPos)
+    {
+        if (blockInteraction) return;
+
+        if (isHovering)
+        {
+            effect?.PlayClickEffect();
+            closeDialog?.ShowDialog();
+            isHovering = false;
+            hoveringHand = "";
         }
     }
 
