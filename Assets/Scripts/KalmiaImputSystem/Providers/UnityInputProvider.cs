@@ -23,18 +23,42 @@ namespace KIS.Providers
 
         public void Initialize()
         {
+            if (mouseCursorTransform == null)
+            {
+                GameObject obj = GameObject.Find("MouseCursor");
+                if (obj != null) mouseCursorTransform = obj.transform;
+            }
+
+            if (mouseCursorTransform != null)
+            {
+                if (mouseCursorTransform.GetComponent<Collider>() == null)
+                {
+                    var col = mouseCursorTransform.gameObject.AddComponent<SphereCollider>();
+                    col.radius = 0.5f;
+                    col.isTrigger = true;
+                    Debug.LogWarning("[KIS] MouseCursorにコライダーがなかったため自動追加しました。");
+                }
+                if (mouseCursorTransform.GetComponent<Rigidbody>() == null)
+                {
+                    var rb = mouseCursorTransform.gameObject.AddComponent<Rigidbody>();
+                    rb.isKinematic = true;
+                    rb.useGravity = false;
+                }
+            }
             Debug.Log("[KIS] UnityInputProvider (Mouse) Initialized.");
         }
 
         public void UpdateProvider()
         {
-            if (Camera.main == null) return;
+            Camera cam = Camera.main;
+            if (cam == null) cam = FindObjectOfType<Camera>();
+            if (cam == null) return; // それでも無い場合はスキップ
 
             // メインカメラの奥方向（Z）への距離を計算してScreenToWorld
-            float depth = Mathf.Abs(Camera.main.transform.position.z - uiZPosition);
+            float depth = Mathf.Abs(cam.transform.position.z - uiZPosition);
             Vector3 mouseScreenPos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, depth);
 
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+            Vector3 worldPos = cam.ScreenToWorldPoint(mouseScreenPos);
 
             // 既存仕様に合わせてZ=0に固定
             worldPos.z = uiZPosition;

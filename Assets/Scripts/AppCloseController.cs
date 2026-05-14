@@ -66,12 +66,28 @@ public void CloseApp()
         uiCursorGroup.SetActive(true);
         Debug.Log("[AppCloseController] uiCursorGroup を表示しました");
     }
+    
+    // cursorManagerが子要素を直接無効化している可能性があるため、
+    // 明示的にSetUICursorActive(true)を呼び出してカーソルを復活させます。
+    var cursorManager = FindObjectOfType<PalmCursorManager>();
+    if (cursorManager != null)
+    {
+        cursorManager.SetUICursorActive(true);
+        Debug.Log("[AppCloseController] PalmCursorManager からもカーソルを復旧しました");
+    }
     else
     {
         Debug.LogWarning("[AppCloseController] uiCursorGroup が設定されていません！");
     }
 
     onAppClosed?.Invoke();
+
+    // 全てのAppLauncherの起動状態を確実にリセットする
+    var launchers = FindObjectsOfType<CommonAppLauncher>(true);
+    foreach (var launcher in launchers)
+    {
+        launcher.ResetRunningState();
+    }
 
     // 最後に自身を非表示（他が反映されてから）
     StartCoroutine(DeactivateSelf());
@@ -94,10 +110,19 @@ private IEnumerator CloseSequence()
 
     ringUI?.SetActive(true);
     uiCursorGroup?.SetActive(true);
+    
+    var cursorManager = FindObjectOfType<PalmCursorManager>();
+    if (cursorManager != null) cursorManager.SetUICursorActive(true);
 
     Debug.Log("[AppCloseController] アプリを閉じてUI操作に戻しました");
 
     onAppClosed?.Invoke();
+    
+    var launchers = FindObjectsOfType<CommonAppLauncher>(true);
+    foreach (var launcher in launchers)
+    {
+        launcher.ResetRunningState();
+    }
 
     yield return null;
     gameObject.SetActive(false); // 最後に無効化

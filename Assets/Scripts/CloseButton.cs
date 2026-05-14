@@ -79,6 +79,20 @@ public class CloseButton : MonoBehaviour
         }
     }
 
+    void OnTriggerStay(Collider other)
+    {
+        if (blockInteraction) return;
+
+        if (!isHovering)
+        {
+            if (other.name.Contains("Right") || other.name.Contains("Left") || other.name.Contains("Mouse"))
+            {
+                isHovering = true;
+                effect?.SetHover(true);
+            }
+        }
+    }
+
     void OnTriggerExit(Collider other)
     {
         if (blockInteraction) return;
@@ -105,7 +119,18 @@ public class CloseButton : MonoBehaviour
     {
         if (blockInteraction) return;
 
-        if (isHovering)
+        bool isPhysicallyTouching = isHovering;
+        Collider myCollider = GetComponent<Collider>();
+        if (myCollider != null)
+        {
+            Vector3 closestPoint = myCollider.ClosestPoint(grabPos);
+            if (Vector3.Distance(closestPoint, grabPos) <= 10f)
+            {
+                isPhysicallyTouching = true;
+            }
+        }
+
+        if (isPhysicallyTouching)
         {
             effect?.PlayClickEffect();
             closeDialog?.ShowDialog();

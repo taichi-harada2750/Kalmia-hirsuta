@@ -12,13 +12,14 @@ namespace KIS.Providers
     {
         public event Action<HandData> OnLeftHandUpdated;
         public event Action<HandData> OnRightHandUpdated;
+        public event Action<HandData> OnMouseUpdated; // インターフェース実装のため追加
 
         private Vector3 lastLeftPos;
         private Vector3 lastRightPos;
 
         public void Initialize()
         {
-            Debug.Log("[KIS] MediapipeProvider Initialized. Subscribing to PalmDataManager.");
+            Debug.Log("[KIS] MediapipeProviderが初期化されました。PalmDataManagerと接続しています。");
         }
 
         public void UpdateProvider()

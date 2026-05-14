@@ -43,6 +43,20 @@ public class SummonTrigger : MonoBehaviour
         }
     }
 
+    void OnTriggerStay(Collider other)
+    {
+        if (!isHandInside)
+        {
+            if (other.name.Contains("Right") || other.name.Contains("Left") || other.name.Contains("Mouse"))
+            {
+                isHandInside = true;
+                if (other.name.Contains("Right")) hoveringHand = "Right";
+                else if (other.name.Contains("Left")) hoveringHand = "Left";
+                else hoveringHand = "Mouse";
+            }
+        }
+    }
+
     void OnTriggerExit(Collider other)
     {
         if (other.name.Contains(hoveringHand))
@@ -67,7 +81,24 @@ public class SummonTrigger : MonoBehaviour
     {
         if (inputBlockTimer > 0f) return;
 
-        if (isHandInside)
+        // UnityのSetActive時におけるColliderのOnTriggerEnter発火漏れを防ぐため、
+        // 物理的に空間が重なっているかを直接判定する
+        bool isPhysicallyTouching = isHandInside;
+        Collider myCollider = GetComponent<Collider>();
+        if (!isPhysicallyTouching && myCollider != null)
+        {
+            Collider[] overlaps = Physics.OverlapBox(myCollider.bounds.center, myCollider.bounds.extents, myCollider.transform.rotation);
+            foreach (var col in overlaps)
+            {
+                if (col.name.Contains("Right") || col.name.Contains("Left") || col.name.Contains("Mouse"))
+                {
+                    isPhysicallyTouching = true;
+                    break;
+                }
+            }
+        }
+
+        if (isPhysicallyTouching)
         {
             ShowRingUI();
             isHandInside = false;
@@ -83,7 +114,43 @@ public class SummonTrigger : MonoBehaviour
             return;
         }
 
-        // KISのイベント駆動になったためUpdate内での直接のGrab監視は削除
+        // KIS導入前の「握ったまま触れると即座に発動する」挙動の復元
+        if (isHandInside)
+        {
+            bool isGrabbing = false;
+            Vector3 currentPos = Vector3.zero;
+
+            if (hoveringHand == "Right")
+            {
+                isGrabbing = PalmDataManager.RightGrabbing;
+                currentPos = PalmDataManager.RightPalm;
+            }
+            else if (hoveringHand == "Left")
+            {
+                isGrabbing = PalmDataManager.LeftGrabbing;
+                currentPos = PalmDataManager.LeftPalm;
+            }
+            else if (hoveringHand == "Mouse")
+            {
+                isGrabbing = Input.GetMouseButton(0);
+                if (Camera.main != null)
+                {
+                    float depth = Mathf.Abs(Camera.main.transform.position.z);
+                    Vector3 mouseScreenPos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, depth);
+                    currentPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+                    currentPos.z = 0f;
+                }
+                else
+                {
+                    currentPos = Input.mousePosition;
+                }
+            }
+
+            if (isGrabbing)
+            {
+                HandleGrab(currentPos);
+            }
+        }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {

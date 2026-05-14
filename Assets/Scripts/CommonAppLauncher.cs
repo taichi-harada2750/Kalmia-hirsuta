@@ -55,4 +55,10 @@ public class CommonAppLauncher : MonoBehaviour
         isRunning = false;
         Debug.Log("[CommonAppLauncher] アプリを終了してUIに戻りました。");
     }
+
+    public void ResetRunningState()
+    {
+        isRunning = false;
+        Debug.Log("[CommonAppLauncher] 起動フラグ(isRunning)がリセットされました。");
+    }
 }

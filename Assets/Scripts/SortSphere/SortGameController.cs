@@ -32,8 +32,9 @@ public class SortGameController : MonoBehaviour
         timerText.gameObject.SetActive(false);
         resultText.gameObject.SetActive(false);
         startButton.SetActive(true);
+        Debug.Log("SortSphereが起動しました。");
 
-        SortGameManager.Instance.ResetScore();
+            SortGameManager.Instance.ResetScore();
         if (scoreText != null)
         {
             scoreText.text = "Score: 0";

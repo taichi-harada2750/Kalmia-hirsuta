@@ -48,6 +48,19 @@ public class IconTriggerWithClose : MonoBehaviour
         }
     }
 
+    void OnTriggerStay(Collider other)
+    {
+        if (!isHovering && (other.name.Contains("Right") || other.name.Contains("Left") || other.name.Contains("Mouse")))
+        {
+            if (other.name.Contains("Right")) hoveringHand = "Right";
+            else if (other.name.Contains("Left")) hoveringHand = "Left";
+            else hoveringHand = "Mouse";
+
+            isHovering = true;
+            effect?.SetHover(true);
+        }
+    }
+
     void OnTriggerExit(Collider other)
     {
         if (other.name.Contains(hoveringHand))
@@ -70,7 +83,18 @@ public class IconTriggerWithClose : MonoBehaviour
 
     private void HandleGrab(Vector3 grabPos)
     {
-        if (!isHovering) return;
+        bool isPhysicallyTouching = isHovering;
+        Collider myCollider = GetComponent<Collider>();
+        if (myCollider != null)
+        {
+            Vector3 closestPoint = myCollider.ClosestPoint(grabPos);
+            if (Vector3.Distance(closestPoint, grabPos) <= 10f)
+            {
+                isPhysicallyTouching = true;
+            }
+        }
+
+        if (!isPhysicallyTouching) return;
 
         effect?.PlayClickEffect();
 

@@ -12,9 +12,16 @@ namespace KIS.Core
 
         private bool wasGrabbing = false;
         private float grabStartTime = 0f;
+        private bool isFirstFrame = true;
 
         public IntentType Recognize(HandData current, Vector3 targetPosition)
         {
+            if (isFirstFrame)
+            {
+                wasGrabbing = current.isGrabbing;
+                isFirstFrame = false;
+                // 初回フレームで既に握っていた場合は、今回発火させずにホールド状態として扱う
+            }
             // Hover
             if (Vector3.Distance(current.position, targetPosition) < hoverDistance && !current.isGrabbing)
                 return IntentType.Hover;

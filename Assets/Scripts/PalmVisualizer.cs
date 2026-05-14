@@ -14,6 +14,21 @@ public class PalmVisualizer : MonoBehaviour
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+
+        // 物理検知漏れ（特に左手など）を防ぐため、コライダーとRigidbodyがなければ自動追加する
+        if (GetComponent<Collider>() == null)
+        {
+            var col = gameObject.AddComponent<SphereCollider>();
+            col.radius = 0.5f; // デフォルトの適切なサイズ
+            col.isTrigger = true;
+            Debug.LogWarning($"[{gameObject.name}] コライダーがアタッチされていなかったため、自動追加しました。");
+        }
+        if (GetComponent<Rigidbody>() == null)
+        {
+            var rb = gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
     }
 
     void Update()

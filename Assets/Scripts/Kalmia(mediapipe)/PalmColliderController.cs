@@ -9,12 +9,14 @@ public class PalmColliderController : MonoBehaviour
     void Start()
     {
         col = GetComponent<Collider>();
-        col.enabled = false; // 最初はオフ
+        col.enabled = true; // KISのイベント駆動システムでは常時ONにしてHoverなどを事前検知させます
+        Debug.Log("カルミアシステムが起動しました。");
     }
 
     void Update()
     {
-        bool isGrabbing = handType == HandType.Right ? PalmDataManager.RightGrabbing : PalmDataManager.LeftGrabbing;
-        col.enabled = isGrabbing;
+        // KISアーキテクチャでは意図（GrabIntent）が通知されるため、
+        // 物理コライダーのON/OFFを用いた判定は不要になりました。
+        // （これをON/OFFしていると、GrabしたフレームでPhysics側が追いつかずクリックが無視される原因になります）
     }
 }

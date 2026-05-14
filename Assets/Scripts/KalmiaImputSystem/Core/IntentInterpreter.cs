@@ -14,7 +14,7 @@ namespace KIS.Core
         {
             if (intent != IntentType.None)
             {
-                Debug.Log($"[KIS] Intent Detected: {intent}");
+                Debug.Log($"[KIS] インテントを検出: {intent}");
                 OnIntentDetected?.Invoke(intent, handData);
             }
         }

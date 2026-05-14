@@ -44,8 +44,9 @@ public class DualAimController : MonoBehaviour
         resultText.gameObject.SetActive(false);
         startButton.SetActive(true);
         scoreDisplay.gameObject.SetActive(true);
+        Debug.Log("DualAimShootingが起動しました。");
 
-
+        
         SortGameManager.Instance.ResetScore();
         if (scoreText != null)
         {
