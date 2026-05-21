@@ -12,8 +12,8 @@ namespace FluidSlime
         public Material membraneMaterial;
         
         [Header("Hysteresis Settings")]
-        public float splitThresholdMultiplier = 4.0f; // radius * this = split distance
-        public float mergeThresholdMultiplier = 2.5f; // radius * this = merge distance
+        public float splitThresholdMultiplier = 100.0f; // radius * this = split distance
+        public float mergeThresholdMultiplier = 90.0f; // radius * this = merge distance
         public float snapForce = 500f; // 分裂時の反発力
         
         [Header("Colliders")]
@@ -26,6 +26,10 @@ namespace FluidSlime
         [Header("Status")]
         public float totalMass = 2.0f; 
         public float currentTension = 0f;
+
+        [Header("Collider Tuning")]
+        [Tooltip("実際の描画サイズに対する当たり判定の割合（誤爆防止のため小さめに設定）")]
+        public float colliderScaleMultiplier = 0.6f;
 
         // シングルトン的にアクセスしやすくするため
         public static SlimeController Instance { get; private set; }
@@ -49,6 +53,16 @@ namespace FluidSlime
             UpdateCoresMass();
         }
 
+        public void ResetSlime()
+        {
+            totalMass = 2.0f;
+            isMerged = true;
+            UpdateCoresMass();
+            
+            if (coreA != null) coreA.ResetPhysics();
+            if (coreB != null) coreB.ResetPhysics();
+        }
+
         void UpdateCoresMass()
         {
             if (coreA != null) coreA.currentMass = totalMass / 2f;
@@ -59,9 +73,33 @@ namespace FluidSlime
         {
             if (coreA == null || coreB == null) return;
 
-            // MediaPipeからの入力（テスト時はマウスなどにする処理が別途App側にある想定）
-            coreA.SetTargetPosition(PalmDataManager.LeftPalm);
-            coreB.SetTargetPosition(PalmDataManager.RightPalm);
+            // MediaPipeからの入力
+            Vector3 targetA = PalmDataManager.LeftPalm;
+            Vector3 targetB = PalmDataManager.RightPalm;
+
+            // MediaPipeの入力がない（(0,0,0)のまま）場合はマウス位置でテストできるようにする
+            if (targetA == Vector3.zero && targetB == Vector3.zero)
+            {
+                if (Camera.main != null)
+                {
+                    Vector3 mousePos = Input.mousePosition;
+                    mousePos.z = 27.9f - Camera.main.transform.position.z;
+                    Vector3 worldMouse = Camera.main.ScreenToWorldPoint(mousePos);
+                    
+                    targetA = worldMouse + Vector3.left * 20f;
+                    targetB = worldMouse + Vector3.right * 20f;
+                }
+            }
+            else
+            {
+                // MediaPipe入力の場合、Z座標をゲーム空間の基準面（27.9f）に固定する
+                // これを行わないと、見た目（シェーダーは2D）は重なっていても、3D空間上ではZ軸がズレていてコライダーが接触しなくなります
+                targetA.z = 27.9f;
+                targetB.z = 27.9f;
+            }
+
+            coreA.SetTargetPosition(targetA);
+            coreB.SetTargetPosition(targetB);
 
             float dist = Vector3.Distance(coreA.transform.position, coreB.transform.position);
             float currentRadiusA = coreA.Radius;
@@ -95,6 +133,13 @@ namespace FluidSlime
                 float minD = avgRadius * mergeThresholdMultiplier;
                 float maxD = avgRadius * splitThresholdMultiplier;
                 currentTension = Mathf.Clamp01((dist - minD) / (maxD - minD));
+
+                // 代謝（テンションが高い＝手を広げている ほど質量を消費する）
+                if (currentTension > 0.1f && FluidSlimeApp.Instance != null && FluidSlimeApp.Instance.IsGameRunning)
+                {
+                    // テンションMAXで毎秒0.5の質量を失うリスク
+                    AddMass(-currentTension * 0.5f * Time.deltaTime);
+                }
             }
             
             // Update Core Physics
@@ -120,15 +165,21 @@ namespace FluidSlime
 
         void UpdateColliders(float dist, float tension)
         {
+            // Shaderのsmin（滑らかな結合）によって、見た目の境界線は実際のRadiusより sminFactor/4 ほど外側に膨張します
+            float currentSmin = membraneMaterial != null ? membraneMaterial.GetFloat("_SminFactor") : 0f;
+            float sminBloat = currentSmin / 4f;
+
             if (colA != null)
             {
                 colA.transform.position = coreA.transform.position;
-                colA.radius = coreA.Radius;
+                float scaleA = colA.transform.lossyScale.x != 0 ? Mathf.Abs(colA.transform.lossyScale.x) : 1f;
+                colA.radius = ((coreA.Radius + sminBloat) * colliderScaleMultiplier) / scaleA;
             }
             if (colB != null)
             {
                 colB.transform.position = coreB.transform.position;
-                colB.radius = coreB.Radius;
+                float scaleB = colB.transform.lossyScale.x != 0 ? Mathf.Abs(colB.transform.lossyScale.x) : 1f;
+                colB.radius = ((coreB.Radius + sminBloat) * colliderScaleMultiplier) / scaleB;
             }
 
             if (bridgeCol != null)
@@ -150,8 +201,18 @@ namespace FluidSlime
                     
                     // サイズ（テンションが高いと細くなる）
                     float avgRadius = (coreA.Radius + coreB.Radius) / 2f;
-                    float thickness = avgRadius * 2f * (1f - tension * 0.5f); // 引っ張ると最大50%細くなる
-                    bridgeCol.size = new Vector3(dist, thickness, thickness);
+                    float visualThickness = (avgRadius + sminBloat) * 2f;
+                    float thickness = visualThickness * (1f - tension * 0.5f) * colliderScaleMultiplier; 
+                    
+                    // 距離(X軸)も少し短くしてコア判定からのはみ出しを防ぐ
+                    float xLength = Mathf.Max(0, dist - ((avgRadius + sminBloat) * colliderScaleMultiplier));
+
+                    // Transformのスケールが1以外の場合の補正（巨大化バグ防止）
+                    float scaleX = bridgeCol.transform.lossyScale.x != 0 ? Mathf.Abs(bridgeCol.transform.lossyScale.x) : 1f;
+                    float scaleY = bridgeCol.transform.lossyScale.y != 0 ? Mathf.Abs(bridgeCol.transform.lossyScale.y) : 1f;
+                    float scaleZ = bridgeCol.transform.lossyScale.z != 0 ? Mathf.Abs(bridgeCol.transform.lossyScale.z) : 1f;
+
+                    bridgeCol.size = new Vector3(xLength / scaleX, thickness / scaleY, thickness / scaleZ);
                 }
                 else
                 {

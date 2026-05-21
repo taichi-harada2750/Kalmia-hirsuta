@@ -16,24 +16,40 @@ namespace FluidSlime
         public TMP_Text massText; // 現在の質量表示用
 
         [Header("ゲーム設定")]
-        public float gameTime = 60f;
+        public float gameTime = 30f;
         public Transform spawnArea;
-        public int initialSpawnCount = 10;
-        public float spawnInterval = 3f;
+        public int initialSpawnCount = 2;
+        public float spawnInterval = 1.5f;
 
         [Header("プレハブ")]
         public GameObject targetPrefab;
 
         private float timeRemaining;
-        private bool isGameRunning = false;
+        public bool IsGameRunning { get; private set; } = false;
         private Coroutine spawnCoroutine;
         private bool hasStartedApp = false;
+
+        public static FluidSlimeApp Instance { get; private set; }
+
+        void Awake()
+        {
+            if (Instance == null) Instance = this;
+            else Destroy(gameObject);
+        }
 
         void Start()
         {
             if (!hasStartedApp)
             {
                 StartApp();
+            }
+        }
+
+        public void ExtendTimer(float amount)
+        {
+            if (IsGameRunning)
+            {
+                timeRemaining += amount;
             }
         }
 
@@ -55,7 +71,7 @@ namespace FluidSlime
 
         void Update()
         {
-            if (isGameRunning)
+            if (IsGameRunning)
             {
                 if (scoreText != null && SortGameManager.Instance != null)
                 {
@@ -79,10 +95,10 @@ namespace FluidSlime
                 SortGameManager.Instance.ResetScore();
             }
 
-            // スライムの質量を初期化
+            // スライムのステータスを初期化
             if (SlimeController.Instance != null)
             {
-                SlimeController.Instance.totalMass = 2.0f; // 初期サイズ
+                SlimeController.Instance.ResetSlime(); 
             }
 
             ClearExistingTargets();
@@ -111,7 +127,7 @@ namespace FluidSlime
             }
 
             timeRemaining = gameTime;
-            isGameRunning = true;
+            IsGameRunning = true;
             timerText.gameObject.SetActive(true);
 
             spawnCoroutine = StartCoroutine(SpawnRoutine());
@@ -130,7 +146,7 @@ namespace FluidSlime
                 yield return null;
             }
 
-            isGameRunning = false;
+            IsGameRunning = false;
             timerText.gameObject.SetActive(false);
             if (spawnCoroutine != null) StopCoroutine(spawnCoroutine);
 
@@ -153,18 +169,39 @@ namespace FluidSlime
 
         IEnumerator SpawnRoutine()
         {
-            while (isGameRunning)
+            while (IsGameRunning)
             {
                 yield return new WaitForSeconds(spawnInterval);
                 int currentTargets = GameObject.FindGameObjectsWithTag("Target").Length;
-                if (currentTargets < 20) // 最大数制限
+                if (currentTargets < 5) // 同時出現数を5までに制限（自然消滅もするため少し多めでOK）
                 {
-                    SpawnTarget();
+                    float r = Random.value;
+                    if (r < 0.2f)
+                    {
+                        // 巨大敵 (20%)
+                        SpawnTarget(TargetType.Giant);
+                    }
+                    else if (r < 0.4f)
+                    {
+                        // 群れ (20%)
+                        int swarmCount = Random.Range(3, 6);
+                        for (int i = 0; i < swarmCount; i++)
+                        {
+                            SpawnTarget(TargetType.Swarm);
+                        }
+                    }
+                    else
+                    {
+                        // 通常 (60%)
+                        SpawnTarget(TargetType.Normal);
+                    }
                 }
             }
         }
 
-        void SpawnTarget()
+        enum TargetType { Normal, Swarm, Giant }
+
+        void SpawnTarget(TargetType type = TargetType.Normal)
         {
             Vector3 pos = GetRandomPosition();
             GameObject obj = Instantiate(targetPrefab, pos, Quaternion.identity);
@@ -173,18 +210,23 @@ namespace FluidSlime
             SlimeTarget st = obj.GetComponent<SlimeTarget>();
             if (st == null) st = obj.AddComponent<SlimeTarget>();
 
-            // ターゲットのサイズをランダムに設定（現在のスライムのサイズに応じて少し大きいものも混ぜる）
             float currentSlimeMass = SlimeController.Instance != null ? SlimeController.Instance.totalMass : 2.0f;
             
-            // 70%の確率でスライムより小さく食べやすい、30%の確率でスライムより大きく危険
-            bool isDangerous = Random.value < 0.3f;
-            if (isDangerous)
+            switch (type)
             {
-                st.mass = currentSlimeMass + Random.Range(0.5f, 2.0f);
-            }
-            else
-            {
-                st.mass = Mathf.Max(0.5f, currentSlimeMass * Random.Range(0.2f, 0.8f));
+                case TargetType.Giant:
+                    // 少しだけ大きい敵（逃げ切れる・成長すればすぐ勝てるサイズ）
+                    st.mass = currentSlimeMass * Random.Range(1.2f, 1.5f);
+                    break;
+                case TargetType.Swarm:
+                    // 非常に小さい群れ
+                    st.mass = Mathf.Max(0.5f, currentSlimeMass * Random.Range(0.05f, 0.15f));
+                    break;
+                case TargetType.Normal:
+                default:
+                    // 確実に食べられる小さい敵
+                    st.mass = Mathf.Max(0.5f, currentSlimeMass * Random.Range(0.2f, 0.4f));
+                    break;
             }
         }
 

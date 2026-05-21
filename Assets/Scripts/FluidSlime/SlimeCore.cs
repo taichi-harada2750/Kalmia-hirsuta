@@ -5,12 +5,12 @@ namespace FluidSlime
     public class SlimeCore : MonoBehaviour
     {
         [Header("Spring Physics")]
-        public float springConstant = 150f;
-        public float damping = 10f;
+        public float springConstant = 250f;
+        public float damping = 15f;
         
         [Header("Mass & Size")]
         public float currentMass = 1.0f;
-        public float baseRadius = 1.0f;
+        public float baseRadius = 30.0f;
 
         private Vector3 velocity = Vector3.zero;
         private Vector3 targetPosition;
@@ -18,7 +18,9 @@ namespace FluidSlime
         // 手動で力を加えるための変数（分裂時のスナップなど）
         private Vector3 externalForce = Vector3.zero;
 
-        public float Radius => baseRadius * Mathf.Sqrt(currentMass);
+        // 質量が増えてもインフレしすぎないように対数的な成長カーブに変更
+        // Mathf.Log10(currentMass * 9 + 1) は、mass=1で1倍、mass=10で2倍、mass=100で3倍になる
+        public float Radius => baseRadius * Mathf.Log10((currentMass * 9f) + 1f);
 
         void Start()
         {
@@ -35,12 +37,18 @@ namespace FluidSlime
             externalForce += force;
         }
 
+        public void ResetPhysics()
+        {
+            velocity = Vector3.zero;
+            externalForce = Vector3.zero;
+        }
+
         // テンションに応じてバネ定数やダンピングを変える機能（オプション）
         public void UpdatePhysicsParams(float tensionModifier)
         {
             // tensionModifier が高い（伸びている）ほど動きを重くするか、逆に軽くするか
             // ここでは張力が高いと動きが重くなる（ダンピング増加）と仮定
-            damping = 10f + (tensionModifier * 5f);
+            damping = 15f + (tensionModifier * 10f);
         }
 
         void Update()
