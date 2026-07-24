@@ -8362,7 +8362,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pauseSceneName: Pause
-  mainSceneName: Main
+  mainSceneName: KIS DEV
   inputCooldown: 1
 --- !u!1 &1612395367
 GameObject:
