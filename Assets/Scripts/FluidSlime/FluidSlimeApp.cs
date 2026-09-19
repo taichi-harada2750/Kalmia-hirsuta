@@ -255,7 +255,7 @@ namespace FluidSlime
         void EndGame()
         {
             int finalScore = SortGameManager.Instance != null ? SortGameManager.Instance.GetScore() : 0;
-            ScoreManager.SaveScore(finalScore);
+            ScoreManager.SaveScore(finalScore, "FluidSlimeScores");
         }
 
         void ClearExistingTargets()

@@ -3149,7 +3149,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -38.3, y: -32.1}
+  m_AnchoredPosition: {x: -38.3, y: 8.8}
   m_SizeDelta: {x: 20, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &724199415
@@ -8879,6 +8879,12 @@ MonoBehaviour:
   rightAddress: /hand/right_palm
   scale: 100
   canvasRect: {fileID: 8521418478973344623}
+  minCutoff: 1
+  beta: 0.007
+  predictionTime: 0.04
+  maxPredictDelta: 0.15
+  lostTimeout: 0.2
+  jumpThreshold: 0.3
 --- !u!114 &1723033021
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9644,7 +9650,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -38.300003, y: -6.299999}
+  m_AnchoredPosition: {x: -38.300003, y: 32.6}
   m_SizeDelta: {x: 20, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!65 &1962142373
@@ -14734,7 +14740,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6424164941018132878
 RectTransform:
   m_ObjectHideFlags: 0
