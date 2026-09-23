@@ -30,7 +30,8 @@ namespace KIS.Providers
             // 速度計算 (m/s)
             Vector3 leftVel = (Time.deltaTime > 0) ? (currentLeftPos - lastLeftPos) / Time.deltaTime : Vector3.zero;
             
-            HandData leftData = new HandData(currentLeftPos, leftVel, isLeftGrabbing, Time.time);
+            HandData leftData = new HandData(currentLeftPos, leftVel, isLeftGrabbing,
+                Time.time, KISHand.Left, PalmDataManager.LeftTracked);
             OnLeftHandUpdated?.Invoke(leftData);
             lastLeftPos = currentLeftPos;
 
@@ -39,7 +40,8 @@ namespace KIS.Providers
             // 速度計算 (m/s)
             Vector3 rightVel = (Time.deltaTime > 0) ? (currentRightPos - lastRightPos) / Time.deltaTime : Vector3.zero;
             
-            HandData rightData = new HandData(currentRightPos, rightVel, isRightGrabbing, Time.time);
+            HandData rightData = new HandData(currentRightPos, rightVel, isRightGrabbing,
+                Time.time, KISHand.Right, PalmDataManager.RightTracked);
             OnRightHandUpdated?.Invoke(rightData);
             lastRightPos = currentRightPos;
         }

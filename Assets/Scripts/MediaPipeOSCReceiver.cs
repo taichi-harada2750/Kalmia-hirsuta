@@ -44,13 +44,11 @@ public class MediaPipeOSCReceiver : MonoBehaviour
 
                         if (text.StartsWith("/hand/right_palm"))
                         {
-                            PalmDataManager.RightPalm = pos;
-                            PalmDataManager.RightGrabbing = isGrabbing;
+                            PalmDataManager.SetRightHand(pos, isGrabbing);
                         }
                         else
                         {
-                            PalmDataManager.LeftPalm = pos;
-                            PalmDataManager.LeftGrabbing = isGrabbing;
+                            PalmDataManager.SetLeftHand(pos, isGrabbing);
                         }
 
                         Debug.Log($"Received: {text} → Position: {pos}, Grab: {isGrabbing}");
@@ -80,13 +78,11 @@ public class MediaPipeOSCReceiver : MonoBehaviour
 
                         if (text.StartsWith("/hand/right_palm"))
                         {
-                            PalmDataManager.RightPalm = pos;
-                            PalmDataManager.RightGrabbing = isGrabbing;
+                            PalmDataManager.SetRightHand(pos, isGrabbing);
                         }
                         else if (text.StartsWith("/hand/left_palm"))
                         {
-                            PalmDataManager.LeftPalm = pos;
-                            PalmDataManager.LeftGrabbing = isGrabbing;
+                            PalmDataManager.SetLeftHand(pos, isGrabbing);
                         }
 
                         Debug.Log($"[{text}] Pos: {pos}, Grab: {isGrabbing}");

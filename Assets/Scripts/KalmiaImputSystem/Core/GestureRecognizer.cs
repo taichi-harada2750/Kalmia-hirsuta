@@ -16,6 +16,17 @@ namespace KIS.Core
 
         private bool holdTriggered = false;
 
+        // KISが保持している状態をUIなどが読み取るための公開情報。
+        // Grabの経過時間や成立判定をBridge側で再計算しない。
+        public bool IsGrabbing => wasGrabbing;
+        public bool IsHolding => holdTriggered;
+        public float GrabStartTime => grabStartTime;
+        public float HoldTime => holdTime;
+        public float GrabElapsed => wasGrabbing
+            ? Mathf.Max(0f, Time.time - grabStartTime)
+            : 0f;
+        public float HoldProgress => Mathf.Clamp01(GrabElapsed / holdTime);
+
         public IntentType Recognize(HandData current, Vector3 targetPosition)
         {
             if (isFirstFrame)

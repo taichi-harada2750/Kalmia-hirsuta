@@ -73,7 +73,8 @@ namespace KIS.Providers
 
             Vector3 velocity = (Time.deltaTime > 0) ? (worldPos - prevMousePos) / Time.deltaTime : Vector3.zero;
 
-            HandData data = new HandData(worldPos, velocity, isGrabbing, Time.time);
+            HandData data = new HandData(worldPos, velocity, isGrabbing,
+                Time.time, KISHand.Mouse, true);
             OnMouseUpdated?.Invoke(data);
             
             prevMousePos = worldPos;

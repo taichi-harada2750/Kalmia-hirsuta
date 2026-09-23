@@ -54,8 +54,8 @@ public class OSCHandReceiver : MonoBehaviour
     {
         if (ProcessMessage(message, right, out Vector2 pos, out bool grab))
         {
-            PalmDataManager.RightPalm = PalmDataManager.ConvertNormalizedToCanvas(pos, canvasRect);
-            PalmDataManager.RightGrabbing = grab;
+            PalmDataManager.SetRightHand(
+                PalmDataManager.ConvertNormalizedToCanvas(pos, canvasRect), grab);
         }
     }
 
@@ -63,8 +63,8 @@ public class OSCHandReceiver : MonoBehaviour
     {
         if (ProcessMessage(message, left, out Vector2 pos, out bool grab))
         {
-            PalmDataManager.LeftPalm = PalmDataManager.ConvertNormalizedToCanvas(pos, canvasRect);
-            PalmDataManager.LeftGrabbing = grab;
+            PalmDataManager.SetLeftHand(
+                PalmDataManager.ConvertNormalizedToCanvas(pos, canvasRect), grab);
         }
     }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Diagnostics;
 
 public static class PalmDataManager
 {
@@ -9,6 +10,34 @@ public static class PalmDataManager
     // 左手
     public static Vector3 LeftPalm = Vector3.zero;
     public static bool LeftGrabbing = false;
+
+    private static long rightLastUpdatedTicks;
+    private static long leftLastUpdatedTicks;
+    private static readonly long trackingTimeoutTicks =
+        (long)(Stopwatch.Frequency * 0.25d);
+
+    public static bool RightTracked => IsRecentlyUpdated(rightLastUpdatedTicks);
+    public static bool LeftTracked => IsRecentlyUpdated(leftLastUpdatedTicks);
+
+    public static void SetRightHand(Vector3 position, bool grabbing)
+    {
+        RightPalm = position;
+        RightGrabbing = grabbing;
+        rightLastUpdatedTicks = Stopwatch.GetTimestamp();
+    }
+
+    public static void SetLeftHand(Vector3 position, bool grabbing)
+    {
+        LeftPalm = position;
+        LeftGrabbing = grabbing;
+        leftLastUpdatedTicks = Stopwatch.GetTimestamp();
+    }
+
+    private static bool IsRecentlyUpdated(long lastUpdatedTicks)
+    {
+        return lastUpdatedTicks > 0 &&
+            Stopwatch.GetTimestamp() - lastUpdatedTicks <= trackingTimeoutTicks;
+    }
 
     // 受信用ヘルパー関数（必要に応じて使える）
     public static Vector3 ConvertNormalizedToWorld(float normX, float normY, float scale = 500f)

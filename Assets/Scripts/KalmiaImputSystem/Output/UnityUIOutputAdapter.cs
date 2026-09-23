@@ -21,7 +21,12 @@ namespace KIS.Output
         public event Action<Vector3> OnSwipeDetected;
         public event Action<Vector3> OnHoldDetected;
 
-        void Start()
+        // 既存の位置のみのイベントを維持しつつ、KISHandを識別できるイベントを追加。
+        public event Action<HandData> OnGrabDetectedWithHand;
+        public event Action<HandData> OnReleaseDetectedWithHand;
+        public event Action<HandData> OnHoldDetectedWithHand;
+
+        private void OnEnable()
         {
             if (kisManager != null)
             {
@@ -35,6 +40,14 @@ namespace KIS.Output
             }
         }
 
+        private void OnDisable()
+        {
+            if (kisManager != null && kisManager.IntentInterpreter != null)
+            {
+                kisManager.IntentInterpreter.OnIntentDetected -= HandleIntent;
+            }
+        }
+
         private void HandleIntent(IntentType intent, HandData handData)
         {
             // Intentの種類に応じて専用のイベントに振り分けて発火
@@ -42,10 +55,12 @@ namespace KIS.Output
             {
                 case IntentType.Grab:
                     OnGrabDetected?.Invoke(handData.position);
+                    OnGrabDetectedWithHand?.Invoke(handData);
                     break;
 
                 case IntentType.Release:
                     OnReleaseDetected?.Invoke(handData.position);
+                    OnReleaseDetectedWithHand?.Invoke(handData);
                     break;
 
                 case IntentType.Hover:
@@ -54,6 +69,7 @@ namespace KIS.Output
 
                 case IntentType.Hold:
                     OnHoldDetected?.Invoke(handData.position);
+                    OnHoldDetectedWithHand?.Invoke(handData);
                     break;
 
                 case IntentType.Swipe:
