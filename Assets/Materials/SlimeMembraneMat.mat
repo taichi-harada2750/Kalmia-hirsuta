@@ -73,9 +73,9 @@ Material:
     - _OcclusionStrength: 1
     - _OutlineWidth: 0.1
     - _Parallax: 0.02
-    - _RadiusA: 5.1188335
-    - _RadiusB: 5.1188335
-    - _SminFactor: 0.010000007
+    - _RadiusA: 10
+    - _RadiusB: 10
+    - _SminFactor: 0.01
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -83,8 +83,8 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 0, g: 0.64312774, b: 0.8301887, a: 1}
-    - _CoreA: {r: 107.08422, g: 112.94841, b: 27.899992, a: 0}
-    - _CoreB: {r: -125.93229, g: -26.753649, b: 27.900007, a: 0}
+    - _CoreA: {r: 169.09315, g: 12.934923, b: 27.898573, a: 0}
+    - _CoreB: {r: -209.07904, g: 73.733635, b: 27.898905, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0.09999997, g: 0.5, b: 0.6, a: 1}
   m_BuildTextureStacks: []

@@ -39,6 +39,10 @@ public class UIHoverEffectPulsing : MonoBehaviour
 
     public void PlayClickEffect()
     {
+        // クリック演出でHover用Tweenを止めるため、次のOnTriggerStayで
+        // SetHover(true)が再度Tweenを開始できる状態に戻す。
+        isHovering = false;
+
         if (pulseTween != null) pulseTween.Kill();
 
         transform.DOScale(originalScale * 1.3f, 0.1f)

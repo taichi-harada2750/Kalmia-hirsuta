@@ -19,7 +19,8 @@ namespace KIS.Output
         public event Action<Vector3> OnReleaseDetected;
         public event Action<Vector3> OnHoverDetected;
         public event Action<Vector3> OnSwipeDetected;
-        
+        public event Action<Vector3> OnHoldDetected;
+
         void Start()
         {
             if (kisManager != null)
@@ -42,12 +43,19 @@ namespace KIS.Output
                 case IntentType.Grab:
                     OnGrabDetected?.Invoke(handData.position);
                     break;
+
                 case IntentType.Release:
                     OnReleaseDetected?.Invoke(handData.position);
                     break;
+
                 case IntentType.Hover:
                     OnHoverDetected?.Invoke(handData.position);
                     break;
+
+                case IntentType.Hold:
+                    OnHoldDetected?.Invoke(handData.position);
+                    break;
+
                 case IntentType.Swipe:
                     OnSwipeDetected?.Invoke(handData.velocity);
                     break;
